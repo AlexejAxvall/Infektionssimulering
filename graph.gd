@@ -1,64 +1,72 @@
+#graph script
+
 extends GraphEdit
+
+var world
 
 # Statistics arrays
 var healthy_stats = []
 var sick_stats = []
+var immune_stats = []
 var infected_stats = []
-var dead_stats = []
+var alive_stats = []
 
-const MAX_POINTS = 100  # Maximum number of points to display on the graph
+var max_points = 0
 
 # Reference to the viewport for drawing
 @onready var graph_viewport = $GraphViewport
 
 func _ready():
-	# Initialize empty statistics arrays
-	healthy_stats.resize(MAX_POINTS)
-	sick_stats.resize(MAX_POINTS)
-	infected_stats.resize(MAX_POINTS)
-	dead_stats.resize(MAX_POINTS)
-
 	# Fill arrays with initial values (zeros)
-	for i in range(MAX_POINTS):
+	for i in range(max_points):
 		healthy_stats[i] = 0
 		sick_stats[i] = 0
+		immune_stats[i] = 0
 		infected_stats[i] = 0
-		dead_stats[i] = 0
+		alive_stats[i] = 0
+		
+	# Initialize empty statistics arrays
+	healthy_stats.resize(max_points)
+	sick_stats.resize(max_points)
+	immune_stats.resize(max_points)
+	infected_stats.resize(max_points)
+	alive_stats.resize(max_points)
 
 
 func _process(delta):
-	if World:  # Ensure World is accessible
-		# Fetch statistics from the World singleton
-		var healthy = World.statistics.get("Healthy", 0)
-		var sick = World.statistics.get("Sick", 0)
-		var infected = World.statistics.get("Infected", 0)
-		var dead = World.statistics.get("Dead", 0)
+	if world:  # Ensure world is accessible
+		# Fetch statistics from the world singleton
+		var healthy = world.statistics.get("Healthy", 0)
+		var sick = world.statistics.get("Sick", 0)
+		var immune = world.statistics.get("Immune", 0)
+		var infected = world.statistics.get("Infected", 0)
+		var alive = world.statistics.get("Alive", 0)
 
 		# Debugging: Print statistics to verify
-		print("World statistics: Healthy =", healthy, ", Sick =", sick, ", Infected =", infected, ", Dead =", dead)
+		#print("world statistics: Healthy: ", healthy, ", Sick: ", sick, ", Immune: ", immune, ", Infected: ", infected, ", Alive: ", alive)
 
 		# Update the graph with the fetched statistics
-		update_statistics(healthy, sick, infected, dead)
+		update_statistics(healthy, sick, immune, infected, alive)
 	else:
-		print("World singleton is not accessible!")
+		#print("What is world?")
+		pass
 
 
-func update_statistics(healthy: int, sick: int, infected: int, dead: int):
+func update_statistics(healthy: int, sick: int, immune: int, infected: int, alive: int):
 	# Add new statistics to the arrays
 	healthy_stats.append(healthy)
 	sick_stats.append(sick)
+	immune_stats.append(immune)
 	infected_stats.append(infected)
-	dead_stats.append(dead)
+	alive_stats.append(alive)
 
-	# Ensure we only display the latest MAX_POINTS
-	if healthy_stats.size() > MAX_POINTS:
+	# Ensure we only display the latest max_points
+	if healthy_stats.size() > max_points:
 		healthy_stats.pop_front()
 		sick_stats.pop_front()
+		immune_stats.pop_front()
 		infected_stats.pop_front()
-		dead_stats.pop_front()
-
-	# Trigger the graph to redraw
-	graph_viewport.update()
+		alive_stats.pop_front()
 
 
 func _draw():
@@ -69,13 +77,14 @@ func _draw():
 func draw_graph():
 	var graph_width = graph_viewport.get_rect().size.x
 	var graph_height = graph_viewport.get_rect().size.y
-	var step_x = graph_width / MAX_POINTS
+	var step_x = graph_width / max_points
 
 	# Draw the graph lines for each dataset
-	draw_graph_line(healthy_stats, graph_height, Color(0, 1, 0), step_x)  # Green for healthy
-	draw_graph_line(sick_stats, graph_height, Color(1, 0.5, 0), step_x)   # Orange for sick
-	draw_graph_line(infected_stats, graph_height, Color(1, 0, 0), step_x)  # Red for infected
-	draw_graph_line(dead_stats, graph_height, Color(0.5, 0.5, 0.5), step_x)  # Gray for dead
+	draw_graph_line(healthy_stats, graph_height, Color(255, 255, 255), step_x)  # Green for healthy
+	draw_graph_line(sick_stats, graph_height, Color(100, 255, 100), step_x)   # Orange for sick
+	draw_graph_line(immune_stats, graph_height, Color(0, 0, 255), step_x)  # Blue for immune
+	draw_graph_line(infected_stats, graph_height, Color(100, 0, 0), step_x)  # Red for infected
+	draw_graph_line(alive_stats, graph_height, Color(0.5, 0.5, 0.5), step_x)  # Gray for alive
 
 
 func draw_graph_line(data: Array, graph_height: float, color: Color, step_x: float):
@@ -94,7 +103,7 @@ func draw_graph_line(data: Array, graph_height: float, color: Color, step_x: flo
 
 
 func get_max_value() -> int:
-	var all_stats = healthy_stats + sick_stats + infected_stats + dead_stats
+	var all_stats = healthy_stats + sick_stats + infected_stats + alive_stats
 	if all_stats.size() == 0:
 		return 0
 	var max_value = all_stats[0]

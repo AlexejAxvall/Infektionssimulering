@@ -1,9 +1,11 @@
+# Person.gd
+
 extends CharacterBody2D
 
 class_name Person
 var id
 
-@onready var navigation_agent_2D : NavigationAgent2D = $NavigationAgent2D
+@onready var navigation_agent_2D: NavigationAgent2D = $NavigationAgent2D
 @onready var colorRect = $ColorRect
 @onready var collisionshape2D = $Body
 var shape
@@ -22,8 +24,10 @@ var statuses = {
 var timer_on = false
 
 func _ready() -> void:
+	#print_debug_info("Person _ready() called on node: " + get_name() + ", ID: " + str(id))
 	if statuses["Infected"]:
-		colorRect.color = Color(100, 0, 0)
+		colorRect.color = Color(1, 0, 0)  # Use normalized color values (0-1)
+		#print_debug_info("Person ID " + str(id) + " is initially infected.")
 	shape = collisionshape2D.shape
 	random_position.x = randi_range(200, 1000)
 	random_position.y = randi_range(200, 600)
@@ -41,66 +45,69 @@ func _physics_process(delta: float) -> void:
 	
 	move_and_slide()
 
-
-
 func _on_infektion_area_body_entered(body: Node2D) -> void:
+	#print_debug_info("Person ID " + str(id) + " entered infection area with body: " + body.get_name())
 	if not timer_on and body is Person and id != body.id:
 		if not statuses["Sick"] and not statuses["Infected"] and not statuses["Immune"] and body.statuses["Infected"]:
-			#print("Stranger danger!")
+			#print_debug_info("Person ID " + str(id) + " is at risk of infection from Person ID " + str(body.id))
 			var infection_roll = randi_range(1, 6)
-			#print("Infection roll: " + str(infection_roll))
+			#print_debug_info("Infection roll: " + str(infection_roll))
 			if infection_roll > 3:
-				#print("Avoided infection!")
+				#print_debug_info("Person ID " + str(id) + " avoided infection.")
 				pass
 			else:
-				#print("Infected")
+				#print_debug_info("Person ID " + str(id) + " got infected.")
 				statuses["Sick"] = true
+				world.statistics["Sick"] += 1
 				world.statistics["Healthy"] -= 1
 				statuses["Infected"] = true
 				world.statistics["Infected"] += 1
+				colorRect.color = Color(1, 0, 0)
 				world.update_statistics()
-				colorRect.color = Color(100, 0, 0)
 				timer_on = true
-				await get_tree().create_timer(4).timeout
-				var roll = randi_range(1, 6)
-				if roll > 4:
-					statuses["Immune"] = true
-					world.statistics["Immune"] += 1
-					statuses["Sick"] = false
-					world.statistics["Healthy"] += 1
-					statuses["Infected"] = false
-					world.statistics["Infected"] -= 1
-					colorRect.color = Color(0, 100, 255)
-				elif roll > 2:
-					statuses["Sick"] = false
-					world.statistics["Healthy"] += 1
-					statuses["Infected"] = false
-					world.statistics["Infected"] -= 1
-					colorRect.color = Color(255, 255, 255)
-				elif roll < 3:
-					statuses["Dead"] = true
-					world.statistics["Alive"] -= 1
-					if not statuses["Sick"] and not statuses["Infected"]:
-						#print("WTF death")
-						pass
-					else:
-						world.statistics["Healthy"] -= 1
-						world.statistics["Infected"] -= 1
-						world.statistics["Alive"] -= 1
-						#print("Roll outcome: " + str(roll))
-						#print("Died!")
-						pass
-					#print("Statuses: " + str(statuses))
-					#print()
-					queue_free()
-				world.update_statistics()
-				timer_on = false
+				await handle_infection_progress()
 
+func handle_infection_progress():
+	await get_tree().create_timer(1).timeout
+	var roll = randi_range(1, 6)
+	#print_debug_info("Recovery roll for Person ID " + str(id) + ": " + str(roll))
+	if roll > 4:
+		#print_debug_info("Person ID " + str(id) + " became immune.")
+		colorRect.color = Color(0, 0, 255)
+		statuses["Immune"] = true
+		world.statistics["Immune"] += 1
+		statuses["Sick"] = false
+		world.statistics["Sick"] -= 1
+		world.statistics["Healthy"] += 1
+		statuses["Infected"] = false
+		world.statistics["Infected"] -= 1
+	elif roll > 2:
+		#print_debug_info("Person ID " + str(id) + " recovered.")
+		colorRect.color = Color(255, 255, 255)
+		statuses["Sick"] = false
+		world.statistics["Healthy"] += 1
+		world.statistics["Sick"] -= 1
+		statuses["Infected"] = false
+		world.statistics["Infected"] -= 1
+	else:
+		#print_debug_info("Person ID " + str(id) + " died.")
+		statuses["Dead"] = true
+		world.statistics["Sick"] -= 1
+		world.statistics["Infected"] -= 1
+		world.statistics["Alive"] -= 1
+		world.statistics["Dead"] += 1
+		world.update_statistics()
+		queue_free()
+		return
+	world.update_statistics()
+	timer_on = false
 
 func _on_navigation_agent_2d_target_reached() -> void:
 	random_position.x = randi_range(200, 1000)
 	random_position.y = randi_range(200, 600)
 
-
 func _on_navigation_agent_2d_velocity_computed(safe_velocity: Vector2) -> void:
 	velocity = safe_velocity
+
+#func print_debug_info(message: String):
+	#print("[DEBUG] [Person ID " + str(id) + "] " + message)

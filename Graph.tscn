@@ -3,8 +3,8 @@
 [ext_resource type="Script" path="res://graph.gd" id="1_mr5g6"]
 
 [node name="GraphEdit" type="GraphEdit"]
-offset_right = 40.0
-offset_bottom = 40.0
+offset_right = 400.0
+offset_bottom = 400.0
 script = ExtResource("1_mr5g6")
 
 [node name="GraphViewport" type="Control" parent="."]
