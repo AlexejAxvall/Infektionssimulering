@@ -1,0 +1,19 @@
+[gd_scene load_steps=2 format=3 uid="uid://7hepo8rptpyi"]
+
+[ext_resource type="Script" path="res://graph.gd" id="1_mr5g6"]
+
+[node name="GraphEdit" type="GraphEdit"]
+offset_right = 40.0
+offset_bottom = 40.0
+script = ExtResource("1_mr5g6")
+
+[node name="GraphViewport" type="Control" parent="."]
+anchors_preset = 0
+offset_right = 40.0
+offset_bottom = 40.0
+
+[node name="GraphNode" type="GraphNode" parent="."]
+layout_mode = 0
+offset_right = 9.0
+offset_bottom = 55.0
+mouse_filter = 1

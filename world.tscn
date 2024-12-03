@@ -1,0 +1,14 @@
+[gd_scene load_steps=3 format=3 uid="uid://denfc6bjwfpj"]
+
+[ext_resource type="Script" path="res://world.gd" id="1_kmvnm"]
+
+[sub_resource type="NavigationPolygon" id="NavigationPolygon_4scc3"]
+vertices = PackedVector2Array(1144.04, 15.9063, 1146.95, 639, 9.97656, 639, 9.00781, 6.07813)
+polygons = Array[PackedInt32Array]([PackedInt32Array(0, 1, 2, 3)])
+outlines = Array[PackedVector2Array]([PackedVector2Array(-1, -4, 1154, 6, 1157, 649, 0, 649)])
+
+[node name="World" type="Node2D"]
+script = ExtResource("1_kmvnm")
+
+[node name="NavigationRegion2D" type="NavigationRegion2D" parent="."]
+navigation_polygon = SubResource("NavigationPolygon_4scc3")
